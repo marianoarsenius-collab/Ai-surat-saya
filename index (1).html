@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asisten Surat Dinas AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #0a1628;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --cream: #f5f0e8;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --light: #f9f7f4;
+    --border: #ddd5c0;
+    --red: #b91c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--light);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--navy);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(201,168,76,0.04) 20px,
+      rgba(201,168,76,0.04) 40px
+    );
+  }
+  .header-inner {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .logo-seal {
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 28px;
+  }
+  .header-text h1 {
+    font-family: 'Playfair Display', serif;
+    color: var(--gold);
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+  .header-text p {
+    color: rgba(255,255,255,0.6);
+    font-size: 0.85rem;
+    margin-top: 4px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+  .gold-line {
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+
+  /* MAIN */
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 28px 16px 48px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(10,22,40,0.06);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--navy);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title span.icon {
+    color: var(--gold);
+    font-size: 1.1rem;
+  }
+
+  /* PROMPT */
+  .prompt-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gray);
+    margin-bottom: 10px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.97rem;
+    color: var(--navy);
+    background: var(--cream);
+    resize: vertical;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+  textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #fffcf5;
+  }
+  textarea::placeholder { color: #aaa; }
+
+  .hint {
+    font-size: 0.78rem;
+    color: var(--gray);
+    margin-top: 8px;
+    font-style: italic;
+  }
+
+  /* FORMAT */
+  .format-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .format-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    background: var(--light);
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--gray);
+    transition: all 0.2s;
+  }
+  .format-btn:hover { border-color: var(--gold); color: var(--navy); }
+  .format-btn.active {
+    border-color: var(--gold);
+    background: var(--navy);
+    color: var(--gold);
+  }
+  .format-btn .fmt-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+
+  /* GENERATE BTN */
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: var(--navy);
+    color: var(--gold);
+    border: none;
+    border-radius: 4px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-generate:hover { background: #162040; }
+  .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-generate::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+  }
+
+  /* LOADING */
+  .loading {
+    display: none;
+    text-align: center;
+    padding: 32px;
+  }
+  .loading.show { display: block; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { color: var(--gray); font-size: 0.9rem; }
+
+  /* RESULT */
+  .result-section {
+    display: none;
+  }
+  .result-section.show { display: block; }
+
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .result-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--navy);
+  }
+  .btn-download {
+    padding: 9px 18px;
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    border-radius: 4px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-download:hover { background: var(--gold-light); }
+
+  .letter-preview {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px 28px;
+    font-size: 0.93rem;
+    line-height: 1.8;
+    color: #1a1a2e;
+    white-space: pre-wrap;
+    font-family: 'Times New Roman', serif;
+    min-height: 200px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  /* ERROR */
+  .error-box {
+    display: none;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 4px;
+    padding: 14px 16px;
+    color: var(--red);
+    font-size: 0.88rem;
+    margin-top: 12px;
+  }
+  .error-box.show { display: block; }
+
+  /* DATA INFO */
+  .data-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    color: #065f46;
+    margin-bottom: 16px;
+  }
+
+  /* EXAMPLES */
+  .examples {
+    margin-top: 12px;
+  }
+  .examples p {
+    font-size: 0.8rem;
+    color: var(--gray);
+    margin-bottom: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .example-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--navy);
+    cursor: pointer;
+    background: var(--cream);
+    transition: all 0.2s;
+  }
+  .chip:hover {
+    border-color: var(--gold);
+    background: #fffcf5;
+  }
+
+  footer {
+    text-align: center;
+    padding: 24px;
+    color: var(--gray);
+    font-size: 0.78rem;
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-seal">🏛️</div>
+    <div class="header-text">
+      <h1>Asisten Surat Dinas AI</h1>
+      <p>Sistem Pembuatan Surat Pemerintahan Otomatis</p>
+    </div>
+  </div>
+  <div class="gold-line"></div>
+</header>
+
+<main>
+
+  <!-- INPUT CARD -->
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">✍️</span> Permintaan Surat
+    </div>
+
+    <div class="prompt-label">Ketik permintaan Anda</div>
+    <textarea id="promptInput" placeholder="Contoh: Buatkan surat tugas untuk Kepala Seksi menghadiri rapat koordinasi di Jakarta tanggal 30 Mei 2026..."></textarea>
+    <p class="hint">Sebutkan jenis surat, tujuan, tanggal, dan detail penting lainnya.</p>
+
+  </div>
+
+  <!-- FORMAT CARD -->
+  <div class="card">
+    <div class="card-title">
+      <span class="icon">📄</span> Format Output
+    </div>
+    <div class="format-row">
+      <button class="format-btn active" id="btnPDF" onclick="selectFormat('PDF')">
+        <span class="fmt-icon">📕</span>PDF
+      </button>
+      <button class="format-btn" id="btnDOCX" onclick="selectFormat('DOCX')">
+        <span class="fmt-icon">📘</span>DOCX (Word)
+      </button>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <button class="btn-generate" id="btnGenerate" onclick="generateLetter()">
+    ✦ &nbsp; Buat Surat Sekarang
+  </button>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loadingBox">
+    <div class="spinner"></div>
+    <p>AI sedang menyusun surat Anda...</p>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result-section card" id="resultSection" style="margin-top:20px;">
+    <div class="result-header">
+      <h3>📋 Pratinjau Surat</h3>
+      <button class="btn-download" id="btnDownload" onclick="downloadLetter()">
+        ⬇ Unduh
+      </button>
+    </div>
+    <div class="letter-preview" id="letterPreview"></div>
+  </div>
+
+</main>
+
+<footer>
+  Asisten Surat Dinas AI — Didukung oleh Google Gemini &amp; Netlify
+</footer>
+
+<script>
+  let selectedFormat = 'PDF';
+  let generatedText = '';
+
+  const PROMPTS = {
+    'Surat Tugas ke Jakarta': 'Buatkan surat tugas untuk Kepala Seksi Perencanaan menghadiri Rapat Koordinasi Nasional di Jakarta pada tanggal 2-3 Juni 2026.',
+    'Surat Undangan Rapat Dinas': 'Buatkan surat undangan rapat dinas internal untuk semua kepala bidang, membahas evaluasi program kerja triwulan II, dilaksanakan Senin 27 Mei 2026 pukul 09.00 WITA di Ruang Rapat Utama.',
+    'Surat Izin Tidak Masuk': 'Buatkan surat izin tidak masuk kerja atas nama Staf Administrasi karena sakit selama 2 hari, tanggal 26-27 Mei 2026, dilengkapi surat dokter.',
+    'Surat Keterangan Pegawai': 'Buatkan surat keterangan bahwa pegawai tersebut benar-benar aktif bekerja di instansi ini, untuk keperluan pengajuan kredit bank.',
+    'Surat Permohonan Dana': 'Buatkan surat permohonan pencairan dana kegiatan sosialisasi program kerja kepada Bendahara Pengeluaran sebesar Rp 5.000.000.',
+  };
+
+  function setPrompt(el) {
+    const text = PROMPTS[el.textContent.trim()] || el.textContent;
+    document.getElementById('promptInput').value = text;
+  }
+
+  function selectFormat(fmt) {
+    selectedFormat = fmt;
+    document.getElementById('btnPDF').classList.toggle('active', fmt === 'PDF');
+    document.getElementById('btnDOCX').classList.toggle('active', fmt === 'DOCX');
+  }
+
+  async function generateLetter() {
+    const prompt = document.getElementById('promptInput').value.trim();
+    if (!prompt) {
+      showError('Silakan masukkan permintaan surat terlebih dahulu.');
+      return;
+    }
+
+    hideError();
+    showLoading(true);
+    document.getElementById('resultSection').classList.remove('show');
+    document.getElementById('btnGenerate').disabled = true;
+
+    try {
+      // Call Netlify Function
+      const response = await fetch('/.netlify/functions/handler', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, format: selectedFormat })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      generatedText = data.letter || data.text || data.result || '';
+
+      if (!generatedText) throw new Error('Tidak ada konten surat yang dihasilkan.');
+
+      document.getElementById('letterPreview').textContent = generatedText;
+      document.getElementById('btnDownload').textContent = `⬇ Unduh ${selectedFormat}`;
+      document.getElementById('resultSection').classList.add('show');
+
+    } catch (err) {
+      showError('Gagal membuat surat: ' + err.message);
+    } finally {
+      showLoading(false);
+      document.getElementById('btnGenerate').disabled = false;
+    }
+  }
+
+  function downloadLetter() {
+    if (!generatedText) return;
+    if (selectedFormat === 'PDF') downloadPDF();
+    else downloadDOCX();
+  }
+
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+    const margin = 25;
+    const pageW = 210;
+    const maxW = pageW - margin * 2;
+
+    doc.setFont('times', 'normal');
+    doc.setFontSize(11);
+
+    const lines = doc.splitTextToSize(generatedText, maxW);
+    let y = margin;
+
+    lines.forEach(line => {
+      if (y > 270) {
+        doc.addPage();
+        y = margin;
+      }
+      doc.text(line, margin, y);
+      y += 7;
+    });
+
+    doc.save('surat-dinas.pdf');
+  }
+
+  function downloadDOCX() {
+    // Simple DOCX using HTML blob that Word can open
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head><meta charset='utf-8'><title>Surat Dinas</title>
+      <style>
+        body { font-family: 'Times New Roman', serif; font-size: 12pt; margin: 2.5cm; }
+        p { line-height: 1.8; margin: 0 0 6pt; }
+      </style></head>
+      <body>${generatedText.replace(/\n/g, '<br/>')}</body>
+      </html>`;
+
+    const blob = new Blob(['\ufeff', htmlContent], {
+      type: 'application/msword'
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'surat-dinas.doc';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function showLoading(show) {
+    document.getElementById('loadingBox').classList.toggle('show', show);
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = '⚠ ' + msg;
+    el.classList.add('show');
+  }
+
+  function hideError() {
+    document.getElementById('errorBox').classList.remove('show');
+  }
+</script>
+</body>
+</html>
